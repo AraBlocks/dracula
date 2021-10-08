@@ -1,0 +1,13 @@
+{
+  "name": "dracula",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dracula.js",
+  "scripts": {},
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "canvas": "^2.8.0",
+    "merge-images": "^2.0.0"
+  }
+}
