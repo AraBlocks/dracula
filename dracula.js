@@ -14,71 +14,27 @@ they'll all be gone before dawn...   v   v
 
 console.log("hello, nighttime world!");
 
-/*
-var magic = require("imagemagick");
-console.log(typeof magic);
-console.log(magic);
-*/
-
-
-//https://www.npmjs.com/package/merge-images
+const util = require('util');
+const fs = require("fs");
+const writeFile = util.promisify(fs.writeFile);
 
 const mergeImages = require('merge-images');
 const { Canvas, Image } = require('canvas');
 
-
-//rise();
-function rise() {
-  console.log("dracula rises to mint dank NFTs");
-
-  mergeImages(['./body.png', './eyes.png', './mouth.png'], {
-    Canvas: Canvas,
-    Image: Image
-  }).then(b64 => console.log(b64));
-    // data:image/png;base64,iVBORw0KGgoAA...
-
-}
-
-rise2();
-async function rise2() {
+rise();
+async function rise() {
   console.log("dracula rises to mint dank NFTs");
   
-  var b64 = await mergeImages(['./body.png', './eyes.png', './mouth.png'], {
-    Canvas: Canvas,
-    Image: Image
-  });
+  var s = await mergeImages(['./body.png', './eyes.png', './mouth.png'], { Canvas: Canvas, Image: Image });
   
-  console.log(b64);
-    // data:image/png;base64,iVBORw0KGgoAA...
+  var d = s.replace(/^data:image\/png;base64,/, "");
+  
+  var r = await writeFile("out.png", d, "base64");
+  
+  console.log("got r");
+  console.log(r);
 
 }
-
-/*
-
-
-
-
-/*
-//https://stackoverflow.com/questions/6926016/how-can-i-save-a-base64-encoded-image-to-disk
-
-var base64Data = req.rawBody.replace(/^data:image\/png;base64,/, "");
-
-require("fs").writeFile("out.png", base64Data, 'base64', function(err) {
-  console.log(err);
-});
-
-
-*/
-
-
-
-
-
-
-//the end
-
-
-
 
 
 
