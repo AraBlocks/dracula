@@ -18,6 +18,7 @@ they'll all be gone before dawn...   v   v
 const util = require("util");
 const fs = require("fs");
 const writeFile = util.promisify(fs.writeFile);
+const mkdir = util.promisify(fs.mkdir);
 
 //npm
 const mergeImages = require("merge-images");
@@ -27,7 +28,7 @@ const { Canvas, Image } = require("canvas");
 const library = require("./library.js");
 const { log, toss } = library;
 const { test, ok, runTests, noop } = library;
-const { start, beyond, starts, toInt } = library;
+const { start, beyond, starts, ends, toInt } = library;
 const { stringToLines, removeBlankLines, lineToWords } = library;
 
 //you could admire the elegant parlor, if dark curtains didn't block out all the light
@@ -51,37 +52,92 @@ const { rollCard, checkCard, addCard, cardHasAnExactly, deckIsMissingExactlys } 
 Set quantity, attempts, and brew below, and we shall begin...
 */
 
-var quantity = 100;//how many cards to generate
+/*
+
+c0 weight1
+c1 weight1 exactly1 +a3 Skull
+c2 weight1 exactly1 Bitcoin Jack-O-Lantern
+c3 weight1 exactly1 +a2 Missing Poster
+c4 weight1 exactly1 +a1 Full Moon
+
+c0 weight506
+c1 weight10 +a3 Skull
+c2 weight100 exactly1 Bitcoin Jack-O-Lantern
+c3 weight50 +a2 Missing Poster
+c4 weight100 +a1 Full Moon
+
+
+*/
+
+var quantity = 666;//how many cards to generate
 var attempts = 50000;//how many times to try to get that many
+var performPressStep = true;//false to just make instructions
 var brew = `
 
-a1 weight1
-a2 weight1
-a3 weight1
+a3 weight1 Sprayroom
+a2 weight2 Washhouse (cool)
+a1 weight3 Clearing (warm)
 
-b1 weight1
-b2 weight1
-b3 weight1
+b1 weight1 Splat
+b2 weight5 Ooze
+b0 weight10
 
-c1 weight1
-c2 weight1
-c3 weight1 exactly2
+c5 weight1 Pumpkin
+c1 weight1 +a3 Skull
+c3 weight1 +a2 Poster
+c4 weight1 +a1 Moon
+c0 weight5
+c2 weight10 exactly1 +a2 Satoshi Jack
+c6 weight1 exactly1 +a1 -c2 -f4 -f12 ARA Moon
 
-d1 weight1
-d2 weight1
-d3 weight1 exactly1
+d1 weight1 Leroy
+d2 weight3 Bridget
+d3 weight6 Marvin
 
-e1 weight1000
-e2 weight1000
-e3 weight1 exactly1
+e4  weight50 exactly1 -c2 -c6 Lollypop Bingle
+e12 weight8 Bingle
+e6  weight1 Orange Inmate
+e14 weight8 Inmate
 
-f1 weight1
-f2 weight1
-f3 weight1
+e10 weight2 Lavender Gimp
+e2  weight4 Gimp
+e7  weight2 Pink Clyde
+e15 weight4 Clyde
 
-g1 weight1
-g2 weight1
-g3 weight1
+e9  weight8 -a1 Edward (cool)
+e1  weight8 -a2 Edward (warm)
+e13 weight8 -a1 Jack (cool)
+e5  weight8 -a2 Jack (warm)
+
+e3  weight8 -a1 Farmer Bob (cool)
+e11 weight8 -a2 Farmer Gary (warm)
+e16 weight8 -a1 Bryce (cool)
+e8  weight8 -a2 Bryce (warm)
+
+f1  weight1 Pink Peter
+f9  weight2 Peter
+f4  weight50 exactly1 +e4 Lollypop Bingle
+f12 weight10 +e12 Bingle
+
+f10 weight1 +e10 Lavender Gimp
+f2  weight4 -e10 Gimp
+f14 weight1 Ginger Marcus
+f6  weight4 Marcus
+
+f11 weight10 -a1 Sacky (cool)
+f3  weight10 -a2 Sacky (warm)
+f5  weight10 -a1 -e12 Fang (cool)
+f13 weight10 -a2 -e12 Fang (warm)
+f15 weight10 -a1 Stitchy (cool)
+f7  weight10 -a2 Stitchy (warm)
+f8  weight10 -a1 Keeper (cool)
+f16 weight10 -a2 Keeper (warm)
+
+g1 weight1 +d1 Leroy
+g2 weight3 +d2 Bridget
+g3 weight6 +d3 Marvin
+
+h1 weight1
 
 `;
 
@@ -96,7 +152,7 @@ var deck = [];//the finished deck of cards
 function rise() {
 	prepare();
 	mix();
-	//here's where you would press()
+	if (performPressStep) press();
 }
 
 function prepare() {
@@ -190,7 +246,8 @@ function mix() {
 	log(`${success} Generated ${deck.length}/${quantity} cards in ${stats.attempts}/${attempts} attempts.
 ${madeOrNot} all the ultra rares, discarding ${stats.discardsSeekingExactlys} cards at the start looking for them.
 Also tossed out ${stats.positives.length} positive and ${stats.negatives.length} negative impossibilities,
-${stats.exactlyOverflows.length} ultra rare overflows, and ${stats.duplicates.length} identical duplicates.`);
+${stats.exactlyOverflows.length} ultra rare overflows, and ${stats.duplicates.length} identical duplicates.
+`);
 };
 
 function deckToText(deck) {
@@ -200,18 +257,62 @@ function deckToText(deck) {
 }
 
 async function press() {
-  log("Dracula rises to mint dank NFTs");
-  
-  var s = await mergeImages(['./body.png', './eyes.png', './mouth.png'], { Canvas: Canvas, Image: Image });
-  
-  var d = s.replace(/^data:image\/png;base64,/, "");
-  
-  var r = await writeFile("out.png", d, "base64");
-  
-  log("got r");
-  log(r);
-
+	var stamp = (new Date).getTime();//timestamp of this generation
+	
+	var legendText = "";//compose comma separated legend text with card number and contained variants
+	for (var i = 0; i < deck.length; i++) {
+		var card = deck[i];
+		var number = i + 1;
+		legendText += number + "," + card + "\r\n";
+	}
+	
+	for (var i = 0; i < deck.length; i++) {
+		var card = deck[i];
+		await pressCard(card, i, stamp, legendText);
+	}
 }
+async function pressCard(card, index, stamp, legendText) {
+	var number = index + 1;
+	var paths = [];
+	for (var i = 0; i < card.length; i++) {
+		var variant = card[i];
+		if (!(variant.length == 2 && ends(variant, "0"))) {//skip blank variants that have number 0
+			paths.push(`./input/${card[i]}.png`);//not blank, include it
+		}
+	}
+
+	//stamp the number on the card
+	var numberText = number+"";
+	while (numberText.length < 3) numberText = "0" + numberText;
+	paths.push(`./input/${numberText[0]}--.png`);
+	paths.push(`./input/-${numberText[1]}-.png`);
+	paths.push(`./input/--${numberText[2]}.png`);
+
+	var folder = `./output${stamp}`;
+	var legend = `./output${stamp}/legend.txt`;
+	var output = `./output${stamp}/${number}.png`;
+
+	var s = await mergeImages(paths, { Canvas: Canvas, Image: Image });
+	var d = s.replace(/^data:image\/png;base64,/, "");
+	if (number == 1) {//just once on the first card
+		await mkdir(folder, {recursive: true});//make the folder
+		await writeFile(legend, legendText, "utf8");//save the legend
+	}
+	await writeFile(output, d, "base64");
+	log(card + " " + output);
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 runTests();//run all the tests scattered throughout
 rise();//run the actual program
