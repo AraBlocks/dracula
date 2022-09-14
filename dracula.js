@@ -69,7 +69,7 @@ c4 weight100 +a1 Full Moon
 
 */
 
-var quantity = 666;//how many cards to generate
+var quantity = 20;//how many cards to generate
 var attempts = 50000;//how many times to try to get that many
 var performPressStep = true;//false to just make instructions
 var brew = `
