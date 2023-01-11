@@ -1,5 +1,5 @@
 
-(function() { // All the code is in an unnamed function to avoid unintentionally making things global
+(async function() { // All the code is in an unnamed function to avoid unintentionally making things global
 
 /*
 ________                            .__                  __        
@@ -149,10 +149,13 @@ var negatives = {};//variants that cannot appear with another variant
 var descriptions = {};//descriptions of each variant
 var deck = [];//the finished deck of cards
 
-function rise() {
+async function rise() {
+	await writeMetadataFiles();
+	/*
 	prepare();
 	mix();
 	if (performPressStep) press();
+	*/
 }
 
 function prepare() {
@@ -307,6 +310,22 @@ async function pressCard(card, index, stamp, legendText) {
 
 
 
+async function writeMetadataFiles() {
+	for (var i = 0; i < 100; i++) {
+var contents = `{
+  "name": "Streampass #${i}",
+  "external_url": "https://rad.live/streampass/",
+  "image": "https://sp.rad.live/streampass/streampass.png",
+  "animation_url": "https://sp.rad.live/streampass/streampass.mp4"
+}
+`;
+		var path = `./output/${i}`;
+		await writeFile(path, contents, "utf8");
+	}
+}
+
+
+
 
 
 
@@ -315,5 +334,5 @@ async function pressCard(card, index, stamp, legendText) {
 
 
 runTests();//run all the tests scattered throughout
-rise();//run the actual program
+await rise();//run the actual program
 })(); // Run the unnamed function that has all the code in this file
