@@ -356,6 +356,9 @@ async function mergePresaleLists() {
 		if (line.startsWith('"0x')) {
 			var address = line.slice(1, 43);
 			o[address] = true;
+		} else if (line.startsWith('0x')) {
+			var address = line.slice(0, 42);
+			o[address] = true;
 		}
 	});
 
