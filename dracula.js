@@ -17,8 +17,10 @@ they'll all be gone before dawn...   v   v
 //node
 const util = require("util");
 const fs = require("fs");
-const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
+const writeFile = util.promisify(fs.writeFile);
+const readDirectory = util.promisify(fs.readdir);
+const readFile = util.promisify(fs.readFile);
 
 //npm
 const mergeImages = require("merge-images");
@@ -150,7 +152,13 @@ var descriptions = {};//descriptions of each variant
 var deck = [];//the finished deck of cards
 
 async function rise() {
+
+	await mergePresaleLists();
+
+	/*
 	await writeMetadataFiles();
+	*/
+
 	/*
 	prepare();
 	mix();
@@ -311,17 +319,61 @@ async function pressCard(card, index, stamp, legendText) {
 
 
 async function writeMetadataFiles() {
-	for (var i = 0; i < 100; i++) {
+	for (var i = 0; i < 10000; i++) {
 var contents = `{
   "name": "Streampass #${i}",
+  "description": "The Rad NFTV Streampass is the first unlimited premium video subscription NFT! Get the best in premium video, web3 content, and features across streaming devices! Check it out on https://rad.live/", 
   "external_url": "https://rad.live/streampass/",
-  "image": "https://sp.rad.live/streampass/streampass.png",
+  "image": "https://sp.rad.live/streampass/streampass.jpg",
   "animation_url": "https://sp.rad.live/streampass/streampass.mp4"
 }
 `;
 		var path = `./output/${i}`;
 		await writeFile(path, contents, "utf8");
 	}
+}
+
+
+
+
+async function mergePresaleLists() {
+
+	var groupSize = 1000;//groups of this number
+	var folder = "./lists/";//input csv lists
+	var outputFile = "groups.txt";//will write this file
+	var newline = "\r\n";//windows ftw
+
+	var listing = await readDirectory(folder);
+	var c = "";//all file contents
+	listing.forEach(filename => {
+		var path = folder + filename;
+		c += "\n" + fs.readFileSync(path).toString() + "\n";
+	});
+
+	var lines = c.split("\n");
+	var o = {};//object with each address as a key
+	lines.forEach(line => {
+		if (line.startsWith('"0x')) {
+			var address = line.slice(1, 43);
+			o[address] = true;
+		}
+	});
+
+	var keys = Object.keys(o);
+	var s = `${keys.length} addresses in ${Math.ceil(keys.length / groupSize)} groups:`;//output string
+	for (var i = 0; i < keys.length; i++) {
+		var key = keys[i];
+
+		if (!(i % groupSize)) {//start a new group
+			s += newline + newline + key;
+
+		} else {//this key is in the middle of a group
+			s += "," + key;
+		}
+	}
+	s += newline;
+
+	await writeFile("groups.txt", s, "utf8");//overwrites like we want it to
 }
 
 
