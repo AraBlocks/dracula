@@ -153,11 +153,11 @@ var deck = [];//the finished deck of cards
 
 async function rise() {
 
-	await mergePresaleLists();
-
 	/*
-	await writeMetadataFiles();
+	await mergePresaleLists();
 	*/
+
+	await writeMetadataFiles();
 
 	/*
 	prepare();
@@ -319,10 +319,10 @@ async function pressCard(card, index, stamp, legendText) {
 
 
 async function writeMetadataFiles() {
-	for (var i = 0; i < 10000; i++) {
+	for (var i = 0; i <= 10000; i++) {
 var contents = `{
-  "name": "Streampass #${i}",
-  "description": "The Rad NFTV Streampass is the first unlimited premium video subscription NFT! Get the best in premium video, web3 content, and features across streaming devices! Check it out on https://rad.live/", 
+  "name": "Stream Pass #${i}",
+  "description": "The Rad NFTV Stream Pass is the first unlimited premium video subscription NFT! Get the best in premium video, web3 content, and features across streaming devices! Check it out on https://rad.live/", 
   "external_url": "https://rad.live/streampass/",
   "image": "https://sp.rad.live/streampass/streampass.jpg",
   "animation_url": "https://sp.rad.live/streampass/streampass.mp4"
